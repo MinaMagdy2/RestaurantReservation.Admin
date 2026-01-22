@@ -237,19 +237,57 @@ internal partial class EditRestaurantViewModel : ReactiveObject, IEditRestaurant
     }
     private async Task Initialize()
     {
+        SelectedRestaurant = null;
+
+        RestaurantId = Guid.Empty;
+        RestaurantName = string.Empty;
+        ImageUrl = string.Empty;
+
+        Meals = Meals.None;
+
+        MustReserveDayBefore = false;
+        MustSelectItemsBeforeSave = false;
+        ReserveOncePerStay = false;
+        CanReserveWithAnotherRestaurantOnSameDay = false;
+
+        AdultsOnly = false;
+        ChildrenOnly = false;
+        DisplayMessageWhenSelect = false;
+
+        SelectedMealPatternCodes = [];
+        SelectedNationalityCodes = [];
+        SelectedRoomTypeCodes = [];
+        SelectedTravelAgentCodes = [];
+
+        UseMealPatternCondition = false;
+        UseNationalityCondition = false;
+        UseRoomTypeCondition = false;
+        UseTravelAgentCondition = false;
+
+        Messages = [];
+        Descriptions = [];
+        Seats = [];
+
+        ErrorMessage = string.Empty;
+        // =======================================
+
         languageList.Clear();
         nationalityList.Clear();
         mealPatternList.Clear();
         travelAgentList.Clear();
         roomTypeList.Clear();
+
         var languageTask = _languageService.GetAllAsync();
         var nationalitiesTask = _comsysService.GetNationalitiesAsync();
         var mealPatternsTask = _comsysService.GetMealPatternsAsync();
         var travelAgentsTask = _comsysService.GetTravelAgentsAsync();
         var roomTypesTask = _comsysService.GetRoomTypesAsync();
+
         await Task.WhenAll(languageTask, nationalitiesTask, mealPatternsTask, travelAgentsTask, roomTypesTask);
+
         if (languageTask.Result.IsSuccess)
             languageList.AddRange(languageTask.Result.Value);
+
         nationalityList.AddRange(nationalitiesTask.Result);
         mealPatternList.AddRange(mealPatternsTask.Result);
         travelAgentList.AddRange(travelAgentsTask.Result);
