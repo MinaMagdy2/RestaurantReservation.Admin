@@ -1,0 +1,45 @@
+﻿@page "/addLanguage"
+@page "/editLanguage/{Id:guid}"
+@inherits ReactiveComponentBase<IEditLanguageViewModel>
+@attribute [Authorize]
+<PageComponent>
+    @if (ViewModel != null)
+    {
+        <PageHeader Header="@Header" />
+        <ShowError ClearError="ClearErrors" ErrorMessage="@ViewModel.ErrorMessage" HasError="ViewModel.HasError" />
+        @if (ViewModel.IsLoading)
+        {
+            <SpinKitCircle />
+        }
+        else
+        {
+            <EditForm Model="ViewModel.Language" OnValidSubmit="SaveEntity">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField Label="Language Name"
+                                      @bind-Value="ViewModel.Language.LanguageName"
+                                      AutoFocus="true" MaxLength="100" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="Language Description"
+                                      @bind-Value="ViewModel.Language.LanguageDescription" MaxLength="200" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="Language Symbol"
+                                      @bind-Value="ViewModel.Language.LanguageSymbol" MaxLength="50" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudButton ButtonType="MudBlazor.ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Tertiary" Size="Size.Medium">Save</MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   StartIcon="@Icons.Material.Filled.Cancel"
+                                   IconColor="Color.Dark" Color="Color.Secondary"
+                                   Size="Size.Medium" OnClick="@Cancel">Cancel</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        }
+
+    }
+</PageComponent>
+
+

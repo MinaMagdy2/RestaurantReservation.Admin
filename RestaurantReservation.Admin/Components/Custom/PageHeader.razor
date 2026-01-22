@@ -1,0 +1,37 @@
+﻿@if (!string.IsNullOrWhiteSpace(Header))
+{
+    <h1 class="page-header">
+        @Header
+    </h1>
+}
+<style>
+   .page-header {
+        -webkit-box-sizing: content-box;
+        -moz-box-sizing: content-box;
+        box-sizing: content-box;
+        cursor: none;
+        width: 80%;
+        position: static;
+        display: block;
+        margin: auto auto 25px auto;
+        padding: 13px;
+        overflow: hidden;
+        border: none;
+        -webkit-border-radius: 25px;
+        border-radius: 25px;
+        font-size: 18px;
+        color: rgba(255,255,255,1);
+        text-align: center;
+        -o-text-overflow: ellipsis;
+        text-overflow: ellipsis;
+        background: #1D2B53;
+        -webkit-box-shadow: 7px 7px 9px 5px rgba(140,140,140,1);
+        box-shadow: 7px 7px 9px 5px rgba(140,140,140,1);
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        margin-top: 10px;
+    }
+</style>
+
+@code {
+    [Parameter] public string Header { get; set; } = string.Empty;
+}

@@ -1,0 +1,10 @@
+﻿@if (ChildContent != null)
+{
+    <div class="pa-3">
+        @ChildContent
+    </div>
+}
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = null!;
+}

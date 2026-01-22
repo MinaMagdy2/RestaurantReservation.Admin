@@ -1,0 +1,21 @@
+﻿<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Blazored.FluentValidation" Version="2.2.0" />
+    <PackageVersion Include="Faso.Blazor.SpinKit" Version="1.0.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.11" />
+    <PackageVersion Include="MudBlazor" Version="8.15.0" />
+    <PackageVersion Include="ReactiveUI.Blazor" Version="22.3.1" />
+    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.5.1" />
+    <PackageVersion Include="SamSoft.Common" Version="1.0.8" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Syncfusion.Blazor" Version="32.1.19" />
+    <PackageVersion Include="ReactiveUI" Version="22.3.1" />
+    <PackageVersion Include="Refit.HttpClientFactory" Version="9.0.2" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+    <PackageVersion Include="FluentValidation" Version="12.0.0" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.15.0.120848" />
+  </ItemGroup>
+</Project>

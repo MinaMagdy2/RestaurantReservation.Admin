@@ -1,0 +1,354 @@
+﻿@typeparam TEnum where TEnum : struct, System.Enum
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using System.Reflection
+@using System.Linq
+
+<div class="@($"enum-multiselect-container {CssClass}")" id="@Id">
+    @if (ShowLabel && !string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="enum-multiselect-label" for="@Id">
+            @Label
+        </label>
+    }
+
+    @if (EnumItems.Count == 0)
+    {
+        <div class="enum-multiselect-empty" role="status">
+            <span>No options available</span>
+        </div>
+    }
+    else
+    {
+        <div class="enum-multiselect-grid" role="group" aria-label="@(string.IsNullOrWhiteSpace(Label) ? typeof(TEnum).Name : Label)">
+            @foreach (var item in EnumItems)
+            {
+                var isSelected = IsSelected(item.Value);
+                var itemId = $"{Id}_item_{Convert.ToInt64(item.Value)}";
+
+                <div class="enum-multiselect-item">
+                    <input type="checkbox"
+                           id="@itemId"
+                           checked="@isSelected"
+                           @onchange="@((e) => Toggle(item.Value, (bool)e.Value!))"
+                           disabled="@Disabled"
+                           class="enum-multiselect-checkbox"
+                           aria-label="@item.Name" />
+                    <label for="@itemId" class="enum-multiselect-item-label @(isSelected ? "enum-multiselect-item-label-selected" : "")">
+                        @item.Name
+                    </label>
+                </div>
+            }
+        </div>
+
+        @if (ShowSelectedCount && EnumItems.Count > 0)
+        {
+            <div class="enum-multiselect-summary" role="status" aria-live="polite">
+                @GetSelectedCountText()
+            </div>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Optional label displayed above the selector.
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = "Select";
+
+    /// <summary>
+    /// Whether to show the label. Default is true.
+    /// </summary>
+    [Parameter]
+    public bool ShowLabel { get; set; } = true;
+
+    /// <summary>
+    /// The current value of the flags enum (bindable).
+    /// </summary>
+    [Parameter]
+    public TEnum Value { get; set; }
+
+    /// <summary>
+    /// Event callback invoked when the value changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TEnum> ValueChanged { get; set; }
+
+    /// <summary>
+    /// Enum values to exclude from display.
+    /// Can be passed as a list or array.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<TEnum>? ExcludedValues { get; set; }
+
+    /// <summary>
+    /// Legacy parameter name for ExcludedValues (for backward compatibility).
+    /// </summary>
+    [Parameter]
+    public IEnumerable<TEnum>? Hide { get; set; }
+
+    /// <summary>
+    /// Additional CSS classes to apply to the container.
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    /// <summary>
+    /// Unique identifier for the component instance.
+    /// </summary>
+    [Parameter]
+    public string Id { get; set; } = $"enum-multiselect-{Guid.NewGuid():N}";
+
+    /// <summary>
+    /// Whether the component is disabled.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Whether to show a summary of selected items count.
+    /// </summary>
+    [Parameter]
+    public bool ShowSelectedCount { get; set; } = false;
+
+    private IReadOnlyList<(string Name, TEnum Value)> EnumItems { get; set; } = Array.Empty<(string, TEnum)>();
+
+    protected override void OnInitialized()
+    {
+        InitializeComponent();
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Re-initialize if ExcludedValues or Hide changes
+        if (EnumItems.Count == 0)
+        {
+            InitializeComponent();
+        }
+    }
+
+    private void InitializeComponent()
+    {
+        // Combine ExcludedValues and Hide (for backward compatibility)
+        var excludedSet = new HashSet<TEnum>();
+        if (ExcludedValues != null)
+        {
+            foreach (var val in ExcludedValues)
+            {
+                excludedSet.Add(val);
+            }
+        }
+        if (Hide != null)
+        {
+            foreach (var val in Hide)
+            {
+                excludedSet.Add(val);
+            }
+        }
+
+        var values = Enum.GetValues(typeof(TEnum))
+            .Cast<TEnum>()
+            .Where(v => !excludedSet.Contains(v))
+            .Select(v => (
+                Name: GetEnumDescription(v),
+                Value: v))
+            .OrderBy(v => Convert.ToInt64(v.Value))
+            .ToList();
+
+        EnumItems = values;
+    }
+
+    private static string GetEnumDescription(TEnum value)
+    {
+        try
+        {
+            var field = value.GetType().GetField(value.ToString());
+            if (field == null) return value.ToString();
+
+            // 1. Check for [Display(Name="...")] attribute
+            var displayAttribute = field.GetCustomAttribute<DisplayAttribute>();
+            if (!string.IsNullOrWhiteSpace(displayAttribute?.Name))
+            {
+                return displayAttribute.Name;
+            }
+
+            // 2. Check for [Description("...")] attribute
+            var descriptionAttribute = field.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .Cast<DescriptionAttribute>()
+                .FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(descriptionAttribute?.Description))
+            {
+                return descriptionAttribute.Description;
+            }
+
+            // 3. Fallback to Enum member name
+            return value.ToString();
+        }
+        catch
+        {
+            return value.ToString();
+        }
+    }
+
+    private bool IsSelected(TEnum item)
+    {
+        // Fix: When Value is None (0), nothing should be selected
+        long current = Convert.ToInt64(Value);
+        if (current == 0) return false;
+
+        long flag = Convert.ToInt64(item);
+        // Ensure flag is not zero (None value)
+        if (flag == 0) return false;
+
+        return (current & flag) == flag;
+    }
+
+    private async Task Toggle(TEnum item, bool selected)
+    {
+        if (Disabled) return;
+
+        long current = Convert.ToInt64(Value);
+        long flag = Convert.ToInt64(item);
+
+        long newValue = selected ? (current | flag) : (current & ~flag);
+
+        var typed = (TEnum)Enum.ToObject(typeof(TEnum), newValue);
+        Value = typed;
+        await ValueChanged.InvokeAsync(typed);
+    }
+
+    private string GetSelectedCountText()
+    {
+        var selectedCount = EnumItems.Count(item => IsSelected(item.Value));
+        if (selectedCount == 0)
+        {
+            return "No items selected";
+        }
+        else if (selectedCount == EnumItems.Count)
+        {
+            return $"All {selectedCount} items selected";
+        }
+        else
+        {
+            return $"{selectedCount} of {EnumItems.Count} items selected";
+        }
+    }
+}
+
+<!-- Professional Styles -->
+<style>
+    .enum-multiselect-container {
+        max-width: 100%;
+        margin: 1rem 0;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        background-color: #ffffff;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .enum-multiselect-container:focus-within {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-color: #6366f1;
+    }
+
+    .enum-multiselect-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+    }
+
+    .enum-multiselect-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .enum-multiselect-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: background-color 0.15s ease-in-out;
+        cursor: pointer;
+    }
+
+    .enum-multiselect-item:hover {
+        background-color: #f9fafb;
+    }
+
+    .enum-multiselect-checkbox {
+        width: 1.25rem;
+        height: 1.25rem;
+        min-width: 1.25rem;
+        cursor: pointer;
+        accent-color: #6366f1;
+        border: 2px solid #9ca3af;
+        border-radius: 0.25rem;
+        transition: all 0.15s ease-in-out;
+    }
+
+    .enum-multiselect-checkbox:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+
+    .enum-multiselect-checkbox:focus {
+        outline: 2px solid #6366f1;
+        outline-offset: 2px;
+    }
+
+    .enum-multiselect-checkbox:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .enum-multiselect-item-label {
+        flex-grow: 1;
+        font-size: 0.875rem;
+        color: #111827;
+        cursor: pointer;
+        line-height: 1.5;
+        user-select: none;
+        transition: color 0.15s ease-in-out;
+    }
+
+    .enum-multiselect-item-label-selected {
+        font-weight: 600;
+        color: #4338ca;
+    }
+
+    .enum-multiselect-empty {
+        padding: 1.5rem;
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-style: italic;
+    }
+
+    .enum-multiselect-summary {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.8125rem;
+        color: #6b7280;
+        text-align: center;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 640px) {
+        .enum-multiselect-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .enum-multiselect-container {
+            padding: 1rem;
+        }
+    }
+</style>

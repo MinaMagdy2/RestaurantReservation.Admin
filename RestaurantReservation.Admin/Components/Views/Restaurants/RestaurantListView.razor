@@ -1,0 +1,106 @@
+﻿@inherits ReactiveComponentBase<IRestaurantListViewModel>
+@inject IJSRuntime JS
+@using MudBlazor
+
+
+
+@if (ViewModel != null)
+{
+    @if (ViewModel.IsLoading)
+    {
+        <SpinKitCircle />
+    }
+    else
+    {
+        <MudPaper Class="d-flex align-items-center justify-space-between p-4 mb-4"
+                  Elevation="1"
+                  Style="background-color:#1D2B53;">
+            <MudText Typo="Typo.h5" Class="fw-bold" Style="color:white">
+                Restaurant
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="AddNew">
+                Add New Restaurant
+
+            </MudButton>
+        </MudPaper>
+        <MudGrid>
+          
+            <MudItem xs="12">
+                <SfGrid id="Grid"
+                        DataSource="@ViewModel.Restaurants"
+                        AllowSorting="false"
+                        AllowFiltering="false"
+                        AllowMultiSorting="false"
+                        AllowPaging="true"
+                        AllowResizing="true"
+                        AllowGrouping="false"
+                        AllowTextWrap="true"
+                        Width="100%"
+                        EnableAdaptiveUI="true">
+
+                    <!-- Columns -->
+                    <GridColumns>
+                        <!-- Simple column -->
+                        <GridColumn Field="@nameof(RestaurantDto.RestaurantName)"
+                                    HeaderText="Restaurant Name"
+                                    AllowResizing="true" />
+
+                        <!-- Template column for actions -->
+                        <GridColumn HeaderText="Commands" Width="200" TextAlign="TextAlign.Center">
+                            <Template>
+                                @{
+                                    var restaurant = context as RestaurantDto;
+                                }
+
+                                @if (!restaurant!.IsObsolete)
+                                {
+                                    <button class="e-btn e-flat bg-info me-1" @onclick="() => EditItem(restaurant.Id)">
+                                        <span class="e-icons e-edit"></span>
+                                    </button>
+                                }
+
+                                <button class="e-btn e-flat bg-danger me-1" @onclick="() => DeleteItem(restaurant.Id)">
+                                    <span class="e-icons e-trash"></span>
+                                </button>
+
+                                <button class="e-btn e-flat @(restaurant.IsObsolete ? "bg-success" : "bg-warning")"
+                                        title="@(restaurant.IsObsolete ? "Resume" : "Pause")"
+                                        @onclick="() => ToggleObsolete(restaurant)">
+                                    <span class="e-icons @(restaurant.IsObsolete ? "e-play" : "e-pause")"></span>
+                                </button>
+                            </Template>
+                        </GridColumn>
+                    </GridColumns>
+
+                    <!-- Optional events -->
+                    <GridEvents TValue="RestaurantDto" CommandClicked="OnCommandClicked" />
+                </SfGrid>
+            </MudItem>
+    }
+
+}
+<style>
+
+    tr:has(td button.bg-success) {
+        opacity: 0.5 !important;
+    }
+
+    tr {
+        opacity: 1;
+    }
+
+    .e-btn {
+        font-size: large;
+    }
+
+</style>
+
+        </MudGrid>
+    }
+
+}
+

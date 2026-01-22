@@ -1,0 +1,186 @@
+﻿@page "/login"
+@using System.Reactive.Threading.Tasks
+@layout LoginLayout
+@inherits ReactiveComponentBase<ILoginReactiveViewModel>
+@rendermode InteractiveServer
+@attribute [AllowAnonymous]
+@if (ViewModel != null)
+{
+    @if (ViewModel.IsLoading)
+    {
+        <SpinKitCircle />
+    }
+    else
+    {
+        <EditForm OnValidSubmit="LoginMethod" FormName="@LoginForm" Model="ViewModel">
+            <div class="login-container">
+                <h2>Login</h2>
+
+                <div class="form-group">
+                    <label>User Name :</label>
+                    <MudTextField @bind-Value="ViewModel!.UserName" Placeholder="User Name" Class="input-box"
+                                  AutoFocus="true" />
+                </div>
+
+                <div class="form-group">
+                    <label>Password :</label>
+                    <MudTextField @bind-Value="ViewModel.Password"
+                                  InputType="@PasswordInput" Placeholder="Password"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@PasswordInputIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility" Class="input-box" />
+                </div>
+                <MudButton Variant="Variant.Filled" ButtonType="MudBlazor.ButtonType.Submit" Color="Color.Primary" Class="signin-btn" >
+                    Sign in
+                </MudButton>
+            </div>
+        </EditForm>
+    }
+
+}
+@code {
+    [Inject]
+    protected ILoginReactiveViewModel LoginReactiveViewModel
+    {
+        get => ViewModel!;
+        set => ViewModel = value;
+    }
+    private const string LoginForm = "login-form";
+    [Inject] public AuthenticationStateProvider AuthenticationState { get; set; } = null!;
+    [Inject] protected NavigationManager Navigation { get; set; } = null!;
+    private string Password { get; set; } = "";
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private async Task LoginMethod()
+    {
+        var result = await ViewModel!.LoginCommand.Execute().ToTask();
+        if (result)
+        {
+            var state = await AuthenticationState.GetAuthenticationStateAsync();
+            if (state.User.Identities.Any())
+            {
+                Navigation.NavigateTo("/");
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+    private void TogglePasswordVisibility()
+    {
+        if (PasswordInput == InputType.Password)
+        {
+            PasswordInput = InputType.Text;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+        }
+        else
+        {
+            PasswordInput = InputType.Password;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+        }
+    }
+}
+
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .login-container {
+        position: relative;
+        z-index: 2;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        padding: 39px;
+        padding-top: 39px;
+        border-radius: 20px;
+        width: 360px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+        color: #fff;
+        text-align: center;
+        height: 400px;
+        padding-top: 59px;
+    }
+
+    h3 {
+        color: #fff;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    h2 {
+        color: #fff;
+        margin-bottom: 25px;
+        font-weight: 600;
+    }
+
+    label {
+        display: block;
+        text-align: left;
+        margin: 10px 0 5px;
+        font-size: 14px;
+    }
+
+    .input-box {
+        width: 100%;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        background: rgba(255, 255, 255, 0.25);
+        color: #fff;
+        font-size: 14px;
+    }
+
+        .input-box::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+    .forgot {
+        display: block;
+        text-align: right;
+        margin-top: 5px;
+        font-size: 13px;
+        color: #aad4ff;
+        text-decoration: none;
+    }
+
+    .signin-btn {
+        width: 100%;
+        margin-top: 20px;
+        height: 45px;
+        font-weight: bold;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        background-color: #0809097d !important;
+    }
+
+    .divider {
+        margin: 25px 0 15px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .socials {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .register {
+        margin-top: 25px;
+        font-size: 13px;
+        color: #fff;
+    }
+
+        .register a {
+            color: #aad4ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+    .form-group {
+        padding-bottom: 20px;
+    }
+</style>

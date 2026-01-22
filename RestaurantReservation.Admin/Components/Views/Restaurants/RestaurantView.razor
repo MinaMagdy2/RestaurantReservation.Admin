@@ -1,0 +1,18 @@
+﻿@page "/Restaurants"
+@attribute [Authorize]
+
+<PageComponent>
+    <RestaurantListView AddEvent="@Add" EditEvent="@Edit" />
+</PageComponent>
+@code {
+    [Inject]
+    protected NavigationManager Navigation { get; set; } = null!;
+    private void Add()
+    {
+        Navigation.NavigateTo("/addRestaurant");
+    }
+    private void Edit(Guid id)
+    {
+        Navigation.NavigateTo($"/editRestaurant/{id}");
+    }
+}

@@ -1,0 +1,87 @@
+﻿<MudGrid>
+    <MudItem xl="12" Class="@(DisableEdit ? "disabled-div" : "")">
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudTimePicker Label="From Time" Editable="true" @bind-Time="@_fromTime"></MudTimePicker>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTimePicker Label="To Time" Editable="true" @bind-Time="@_toTime"></MudTimePicker>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField HideSpinButtons="true"
+                                 Min="0" Immediate="true" T="int"
+                                 Variant="Variant.Text"
+                                 @bind-Value="@_maximumCapacity"
+                                 Label="Maximum Capacity" Clearable="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+                           Color="Color.Info"
+                           OnClick="@Save"
+                           Size="Size.Small">
+                    Save
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           Color="Color.Error" OnClick="@Cancel">
+                    Cancel
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12">
+        <MudButton Variant="Variant.Filled" DropShadow="false" OnClick="Add" Color="Color.Primary">Add Seating</MudButton>
+    </MudItem>
+    <MudItem xs="12">
+        <SfGrid DataSource="@CurrentValue"
+                AllowSorting="false"
+                AllowFiltering="false"
+                AllowMultiSorting="false"
+                AllowPaging="true"
+                AllowResizing="true"
+                AllowGrouping="false"
+                AllowTextWrap="true"
+                ShowColumnMenu="false"
+                @attributes="@GridAttributes"
+                Width="100%"
+                EnableAdaptiveUI="true">
+            <GridEvents TValue="SeatingDetailDto"
+                        CommandClicked="OnCommandClicked">
+            </GridEvents>
+            <GridColumns>
+                <GridColumn Field="@nameof(SeatingDetailDto.FromTime)" HeaderText="From" Type="ColumnType.TimeOnly" Format="HH:mm" />
+                <GridColumn Field="@nameof(SeatingDetailDto.ToTime)" HeaderText="To" Type="ColumnType.TimeOnly" Format="HH:mm" />
+                <GridColumn Field="@nameof(SeatingDetailDto.MaximumCapacity)" HeaderText="Capacity" Type="ColumnType.Integer" />
+                <GridColumn HeaderText="Commands" Width="180">
+                    <GridCommandColumns>
+                        <GridCommandColumn Type="CommandButtonType.None"
+                                           ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-edit", CssClass = "e-flat" })"
+                                           Title="Edit"
+                                           ID="@EditCommandId">
+                            <GridCommandColumn ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-delete", CssClass = "e-flat" })"
+                                               Type="CommandButtonType.None"
+                                               Title="Add Nationalities" ID="@DeleteCommandId" />
+                        </GridCommandColumn>
+                    </GridCommandColumns>
+                </GridColumn>
+            </GridColumns>
+        </SfGrid>
+    </MudItem>
+</MudGrid>
+
+
+
+<style>
+    .e-grid[disable="yes"] {
+        opacity: .5;
+        pointer-events: none;
+        -ms-touch-action: none;
+        touch-action: none;
+        cursor: no-drop;
+    }
+
+    .disabled-div {
+        opacity: 0.5; /* Makes it visually appear disabled */
+        pointer-events: none; /* Prevents interaction with child elements */
+    }
+</style>

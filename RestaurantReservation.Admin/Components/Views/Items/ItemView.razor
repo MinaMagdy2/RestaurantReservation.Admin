@@ -1,0 +1,18 @@
+﻿@page "/Items"
+@attribute [Authorize]
+
+<PageComponent>
+    <ItemListView AddEvent="@Add" EditEvent="@Edit" />
+</PageComponent>
+@code {
+    [Inject]
+    protected NavigationManager Navigation { get; set; } = null!;
+    private void Add()
+    {
+        Navigation.NavigateTo("/addItem");
+    }
+    private void Edit(Guid id)
+    {
+        Navigation.NavigateTo($"/editItem/{id}");
+    }
+}

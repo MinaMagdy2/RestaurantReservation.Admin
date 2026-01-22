@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<PackageReference Include="ReactiveUI" />
+		<PackageReference Include="ReactiveUI.SourceGenerators">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Refit.HttpClientFactory" />
+		<PackageReference Include="SamSoft.Common" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+		<!--<PackageReference Include="SonarAnalyzer.CSharp">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<Analyzer Include="$(NuGetPackageRoot)SonarAnalyzer.CSharp/$(SonarAnalyzerVersion)/analyzers/*.dll" Visible="false" />-->
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\RestaurantReservation\RestaurantReservation.Dto\RestaurantReservation.Dto.csproj" />
+	</ItemGroup>
+</Project>

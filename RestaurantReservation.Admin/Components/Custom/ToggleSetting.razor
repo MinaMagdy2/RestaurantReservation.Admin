@@ -1,0 +1,81 @@
+﻿@using Syncfusion.Blazor.Buttons
+
+<div class="toggle-inline">
+    <SfSwitch @bind-Checked="@CurrentValue"
+              OffLabel="@OffLabel"
+              OnLabel="@OnLabel"
+              TChecked="bool"
+              CssClass="@CssClass" />
+
+    <label class="toggle-inline-label @(Value ? "label-on" : "label-off")">
+        @Label
+    </label>
+</div>
+
+@code {
+    private bool _currentValue;
+    private bool CurrentValue
+    {
+        get => _currentValue;
+        set
+        {
+            if (_currentValue != value)
+            {
+                _currentValue = value;
+                ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+    protected override void OnInitialized()
+    { _currentValue = Value; }
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+
+    [Parameter] public string Label { get; set; } = "";
+
+    [Parameter] public string OnLabel { get; set; } = "On";
+    [Parameter] public string OffLabel { get; set; } = "Off";
+
+    [Parameter] public string CssClass { get; set; } = "custom-iOS";
+}
+<style>
+    .toggle-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .toggle-inline-label {
+        padding: 10px 0;
+        font-size: 1rem;
+        user-select: none;
+    }
+    /* When Value = false */
+    .label-off {
+        color: rgba(0, 0, 0, 0.85); /* darker text */
+    }
+
+    /* When Value = true */
+    .label-on {
+        color: rgba(0, 80, 255, 0.95); /* blue */
+    }
+    .e-switch-wrapper.custom-iOS .e-switch-inner.e-switch-active,
+    .e-switch-wrapper.custom-iOS:hover .e-switch-inner.e-switch-active .e-switch-on {
+        background-color: #3df865;
+        border-color: #3df665;
+    }
+
+    .e-switch-wrapper.custom-iOS {
+        width: 60px;
+        height: 24px;
+    }
+
+        .e-switch-wrapper.custom-iOS .e-switch-handle {
+            width: 20px;
+            height: 20px;
+        }
+
+            .e-switch-wrapper.custom-iOS .e-switch-handle.e-switch-active {
+                margin-left: -22px;
+            }
+</style>

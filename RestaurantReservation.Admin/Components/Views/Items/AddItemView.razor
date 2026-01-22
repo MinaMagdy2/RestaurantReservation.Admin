@@ -1,0 +1,111 @@
+﻿@page "/addItem"
+@page "/editItem/{Id:guid}"
+@using RestaurantReservation.Admin.Service.Interfaces.ViewModels
+@inherits ReactiveComponentBase<IAddItemViewModel>
+@attribute [Authorize]
+<div>
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-10" >
+
+        <MudPaper Elevation="3" Class="pa-6" Style=" border-radius:15px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); color:white;">
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-6">
+                <MudText Typo="Typo.h5" Class="fw-bold" Style="color:black;">
+                    @Header
+                </MudText>
+
+                <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">
+                    Item Form
+                </MudChip>
+            </MudStack>
+
+            <ShowError ClearError="ClearErrors"
+                       ErrorMessage="@ViewModel.ErrorMessage"
+                       HasError="ViewModel.HasError" />
+
+            <EditForm Model="ViewModel.Item" OnValidSubmit="SaveEntity">
+
+                <MudGrid Spacing="4">
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Item Name"
+                                      @bind-Value="ViewModel.Item.ItemName"
+                                      Required
+                                      Variant="Variant.Outlined"
+                                      FullWidth
+                                      Style="color:black !important; --mud-palette-text-primary:black; --mud-palette-outline:black;" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Price"
+                                      @bind-Value="ViewModel.Item.Price"
+                                      Type="number"
+                                      Variant="Variant.Outlined"
+                                      Adornment="Adornment.Start"
+                                      AdornmentText="$"
+                                      FullWidth
+                                      Style="color:black; --mud-palette-text-primary:#ffffff; --mud-palette-outline:#ffffff;" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField Label="Description"
+                                      @bind-Value="ViewModel.Item.Description"
+                                      Lines="3"
+                                      Variant="Variant.Outlined"
+                                      FullWidth
+                                      Style="color:black; --mud-palette-text-primary:#ffffff; --mud-palette-outline:#ffffff;" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudSelect T="string"
+                                   Label="Restaurants"
+                                   MultiSelection
+                                   Variant="Variant.Outlined"
+                                   SelectedValues="ViewModel.SelectedRestaurantNames"
+                                   SelectedValuesChanged="vals => ViewModel.SelectedRestaurantNames = vals.ToList()"
+                                   FullWidth
+                                   Style="--mud-palette-text-primary:black; --mud-palette-outline:black;">
+                            @foreach (var r in ViewModel.Restaurants)
+                            {
+                                <MudSelectItem T="string" Value="@r.RestaurantName">
+                                    @r.RestaurantName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <ImageUpload @bind-Value="ViewModel.Item.ImageUrl" />
+                    </MudItem>
+
+                    <MudItem xs="12" Class="d-flex justify-space-between gap-2 mt-4">
+                        <MudButton ButtonType="MudBlazor.ButtonType.Submit"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Save">
+                            Save Item
+                        </MudButton>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Secondary"
+                                   OnClick="Cancel">
+                            Cancel
+                        </MudButton>
+                    </MudItem>
+
+                </MudGrid>
+
+            </EditForm>
+
+        </MudPaper>
+
+    </MudContainer>
+
+</div>
+
+<style>
+    .mud-main-content{
+        background-color: #1D2B53;
+    }
+    input{
+        color:black;
+    }
+</style>

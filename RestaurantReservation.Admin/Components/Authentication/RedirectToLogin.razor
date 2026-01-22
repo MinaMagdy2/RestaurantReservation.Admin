@@ -1,0 +1,12 @@
+﻿@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public string ReturnUrl { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (ReturnUrl.Contains("logout"))
+            ReturnUrl = "/";
+        NavigationManager.NavigateTo($"/login?returnUrl={ReturnUrl}", forceLoad: true);
+    }
+}

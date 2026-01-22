@@ -1,0 +1,55 @@
+﻿@inherits ReactiveComponentBase<ILanguageListViewModel>
+@if (ViewModel != null)
+{
+    @if (ViewModel.IsLoading)
+    {
+        <SpinKitCircle />
+    }
+    else
+    {
+        <PageHeader Header="Languages" />
+        <MudGrid>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddNew"
+                           IconColor="Color.Primary"
+                           Size="Size.Large">
+                    Add New Language
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12">
+                <SfGrid id="Grid"
+                        DataSource="@ViewModel.Languages"
+                        AllowSorting="false"
+                        AllowFiltering="false"
+                        AllowMultiSorting="false"
+                        AllowPaging="true"
+                        AllowResizing="true"
+                        AllowGrouping="false"
+                        AllowTextWrap="true"
+                        Width="100%"
+                        EnableAdaptiveUI="true">
+                    <GridEvents TValue="LanguageDto"
+                                CommandClicked="OnCommandClicked">
+                    </GridEvents>
+                    <GridColumns>
+                        <GridColumn Field="@nameof(LanguageDto.LanguageName)" AllowResizing="true" HeaderText="Language Name" />
+                        <GridColumn Field="@nameof(LanguageDto.LanguageDescription)" AllowResizing="true" HeaderText="Description" />
+                        <GridColumn HeaderText="Commands" Width="180">
+                            <GridCommandColumns>
+                                <GridCommandColumn Type="CommandButtonType.None"
+                                                   ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-edit", CssClass = "e-flat" })"
+                                                   Title="Edit"
+                                                   ID="@EditCommandId">
+                                    <GridCommandColumn ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-add", CssClass = "e-flat" })"
+                                                       Type="CommandButtonType.None"
+                                                       Title="Add Nationalities" ID="@AddNationalitiesCommandId" />
+                                </GridCommandColumn>
+                            </GridCommandColumns>
+                        </GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </MudItem>
+        </MudGrid>
+    }
+}

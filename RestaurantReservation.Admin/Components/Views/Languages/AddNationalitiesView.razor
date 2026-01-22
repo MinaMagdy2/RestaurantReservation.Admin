@@ -1,0 +1,46 @@
+﻿@page "/LanguageAddNationalities/{Id:guid}"
+@inherits ReactiveComponentBase<IAddLanguageNationalitiesViewModel>
+@attribute [Authorize]
+<PageComponent>
+    <PageHeader Header="Add Nationalities to Language" />
+    @if (ViewModel != null)
+    {
+        @if (ViewModel.IsLoading)
+        {
+            <SpinKitCircle />
+        }
+        else
+        {
+            <ShowError ClearError="ClearErrors" ErrorMessage="@ViewModel.ErrorMessage" HasError="ViewModel.HasError" />
+            <MudGrid>
+                <MudItem xl="12">
+                    <MudText Align="Align.Center"><b>Language</b> : @ViewModel.Language.LanguageName</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <SfMultiSelect TValue="string[]"
+                                   Mode="VisualMode.CheckBox"
+                                   AllowFiltering="true"
+                                   TItem="NationalityDto" Width="100%"
+                                   Placeholder="Select Nationalities"
+                                   DataSource="@ViewModel.Nationalities"
+                                   @bind-Value="ViewModel.SelectedNationalityCodes">
+                        <MultiSelectFieldSettings Value="NationalityCode" Text="NationalityName" />
+                    </SfMultiSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton ButtonType="MudBlazor.ButtonType.Button"
+                               OnClick="@Save"
+                               Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               IconColor="Color.Secondary" 
+                               Size="Size.Medium">Save</MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               IconColor="Color.Dark" Color="Color.Secondary"
+                               Size="Size.Medium" OnClick="@Cancel">Cancel</MudButton>
+                </MudItem>
+            </MudGrid>
+        }
+    }
+</PageComponent>

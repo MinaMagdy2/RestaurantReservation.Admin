@@ -1,0 +1,92 @@
+﻿@using SamSoft.Common.ExtensionMethods
+@using Syncfusion.Blazor.Inputs
+<MudField Label="Upload Image" Variant="Variant.Outlined" InnerPadding="true">
+    <MudGrid>
+        <MudItem lg="8" md="12">
+            <SfUploader AutoUpload="false"
+                        AllowMultiple="false"
+                        AllowedExtensions=".png,.jpeg,.jpg">
+                <UploaderEvents ValueChange="OnChange" OnClear="OnClear"></UploaderEvents>
+                <UploaderTemplates>
+                    <Template Context="HttpContext">
+                        <table>
+                            <tr>
+                                <td>
+                                    <div style="padding: 7px;">
+                                        <h6 title="@(HttpContext.Name)"> Picture File Name: @(HttpContext.Name)</h6>
+                                        <i style="padding: 10px">File Size: @((HttpContext.Size / 1000).ToString("n2")) KB</i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </Template>
+                </UploaderTemplates>
+            </SfUploader>
+        </MudItem>
+        <MudItem lg="4" md="12">
+            <DisplayImage ImageUrl="@Value" />
+        </MudItem>
+    </MudGrid>
+</MudField>
+@code {
+    private async Task OnChange(UploadChangeEventArgs args)
+    {
+        if (args.Files.Count <= 0)
+            return;
+        if (args.Files[0].File != null)
+        {
+            var imageFile = args.Files[0].File;
+            mimeContentType = args.Files[0].FileInfo.MimeContentType;
+            using var ms = new MemoryStream();
+            await imageFile.OpenReadStream().CopyToAsync(ms);
+            byteArray = ms.ToArray();
+            ms.Close();
+            CurrentValue = byteArray.GetImageUrl(mimeContentType);
+        }
+    }
+    private byte[] byteArray = [];
+    private string mimeContentType = string.Empty;
+    private string _currentValue = string.Empty;
+
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+
+    private string CurrentValue
+    {
+        get => _currentValue;
+        set
+        {
+            if (_currentValue != value)
+            {
+                _currentValue = value;
+                ValueChanged.InvokeAsync(value); // Notify parent of the change
+            }
+        }
+    }
+
+
+    protected override void OnInitialized()
+    {
+        _currentValue = Value;
+        if (string.IsNullOrEmpty(Value))
+        {
+            var result = ByteArrayExtension.FromImageUrl(Value);
+            if (result.IsSuccess)
+            {
+                byteArray = result.Value.File;
+                mimeContentType = result.Value.MimeContentType;
+            }
+        }
+    }
+
+    private void OnClear(ClearingEventArgs args)
+    {
+        byteArray = [];
+        mimeContentType = string.Empty;
+        CurrentValue = string.Empty;
+    }
+}

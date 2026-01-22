@@ -1,0 +1,76 @@
+﻿<MudGrid>
+    <MudItem xs="12" Class="@(DisableEdit ? "disabled-div" : "")">
+        <MudField Variant="Variant.Outlined" InnerPadding="true">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="@languageValue"
+                                  Label="@languageName" Clearable="true" MaxLength="199" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+                               Color="Color.Info"
+                               OnClick="@Save"
+                               Size="Size.Small">
+                        Save
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               Color="Color.Error" OnClick="@Cancel">
+                        Cancel
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudField>
+    </MudItem>
+    <MudItem xs="12">
+        <SfGrid DataSource="@CurrentValue"
+                AllowSorting="false"
+                AllowFiltering="false"
+                AllowMultiSorting="false"
+                AllowPaging="true"
+                AllowResizing="true"
+                AllowGrouping="false"
+                AllowTextWrap="true"
+                ShowColumnMenu="false"
+                @attributes="@GridAttributes"
+                Width="100%"
+                EnableAdaptiveUI="true">
+            <GridEvents TValue="RestaurantLanguageModel"
+                        CommandClicked="OnCommandClicked">
+            </GridEvents>
+            <GridColumns>
+                <GridColumn Field="@nameof(RestaurantLanguageModel.LanguageName)" HeaderText="Language" />
+                <GridColumn Field="@nameof(RestaurantLanguageModel.Value)" HeaderText="Value" />
+
+                <GridColumn Width="180">
+                    <GridCommandColumns>
+                        <GridCommandColumn Type="CommandButtonType.None"
+                                           ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-edit", CssClass = "e-flat" })"
+                                           Title="Edit"
+                                           ID="@EditCommandId">
+                            <GridCommandColumn ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-delete", CssClass = "e-flat" })"
+                                               Type="CommandButtonType.None"
+                                               Title="Add Nationalities" ID="@DeleteCommandId" />
+                        </GridCommandColumn>
+                    </GridCommandColumns>
+                </GridColumn>
+            </GridColumns>
+        </SfGrid>
+    </MudItem>
+</MudGrid>
+
+
+<style>
+    .e-grid[disable="yes"] {
+        opacity: .5;
+        pointer-events: none;
+        -ms-touch-action: none;
+        touch-action: none;
+        cursor: no-drop;
+    }
+
+    .disabled-div {
+        opacity: 0.5; /* Makes it visually appear disabled */
+        pointer-events: none; /* Prevents interaction with child elements */
+    }
+</style>

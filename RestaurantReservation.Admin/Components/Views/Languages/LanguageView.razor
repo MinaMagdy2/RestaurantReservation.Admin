@@ -1,0 +1,26 @@
+﻿@page "/Languages"
+@attribute [Authorize]
+<PageTitle>Languages</PageTitle>
+<PageComponent>
+    <LanguageListView 
+        AddEvent="@Add" 
+        EditEvent="Edit" 
+        AddNationalitiesEvent="@AddNationalities" />
+</PageComponent>
+
+@code {
+    [Inject]
+    protected NavigationManager Navigation { get; set; } = null!;
+    private void Add()
+    {
+        Navigation.NavigateTo("/addLanguage");
+    }
+    private void Edit(Guid id)
+    {
+        Navigation.NavigateTo($"/editLanguage/{id}");
+    }
+    private void AddNationalities(Guid id)
+    {
+        Navigation.NavigateTo($"/LanguageAddNationalities/{id}");
+    }
+}

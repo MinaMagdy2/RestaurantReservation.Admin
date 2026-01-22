@@ -1,0 +1,50 @@
+﻿@if (HasError && !string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="col-12 control-section msg-icon-section sb-property-border">
+        <div class="content-section">
+            <SfMessage Severity="MessageSeverity.Error"
+                       ShowIcon="@_errorIcon"
+                       ShowCloseIcon="@_errorCloseIcon"
+                       Closed="@ErrorClosed"
+                       Visible="@HasError">
+                @ErrorMessage
+            </SfMessage>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool HasError { get; set; }
+    [Parameter]
+    public string ErrorMessage { get; set; } = string.Empty;
+    [Parameter]
+    public EventCallback ClearError { get; set; }
+    private readonly bool _errorCloseIcon = true;
+    private readonly bool _errorIcon = true;
+    private async Task ErrorClosed()
+    {
+        if (ClearError.HasDelegate)
+            await ClearError.InvokeAsync();
+    }
+}
+<style>
+    .msg-icon-section .content-section {
+        margin: 0 auto;
+        max-width: 520px;
+        padding-top: 10px;
+    }
+
+    .msg-icon-section .e-message {
+        margin: 10px 0;
+    }
+
+    .msg-icon-section .e-btn {
+        display: block;
+        margin: 10px 0;
+    }
+
+        .msg-icon-section .e-btn.msg-hidden {
+            display: none;
+        }
+</style>

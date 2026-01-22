@@ -1,0 +1,107 @@
+@typeparam TItem
+@typeparam TValue
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="multi-select-listbox @(Disabled ? "multi-select-disabled" : "")" id="@_componentId">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="multi-select-label" for="@($"{_componentId}-search")">@Label</label>
+    }
+
+    @if (ShowSearch)
+    {
+        <div class="multi-select-search-container">
+            <input type="text" id="@($"{_componentId}-search")" class="multi-select-search-input"
+                placeholder="@SearchPlaceholder" value="@_searchText" @oninput="HandleSearchChanged" disabled="@Disabled"
+                aria-label="@Label" aria-controls="@($"{_componentId}-listbox")" />
+            @if (!string.IsNullOrWhiteSpace(_searchText))
+            {
+                <button type="button" class="multi-select-search-clear" @onclick="ClearSearch" disabled="@Disabled"
+                    aria-label="Clear search">
+                    ×
+                </button>
+            }
+        </div>
+    }
+
+    @if (ShowSelectButtons && DataSource != null && FilteredItems.Any() && !IsLoading)
+    {
+        <div class="multi-select-buttons">
+            <button type="button" class="multi-select-button multi-select-button-all" @onclick="HandleSelectAll"
+                disabled="@Disabled" aria-label="@SelectAllText">
+                @SelectAllText
+            </button>
+            <button type="button" class="multi-select-button multi-select-button-none" @onclick="HandleSelectNone"
+                disabled="@Disabled" aria-label="@SelectNoneText">
+                @SelectNoneText
+            </button>
+        </div>
+    }
+
+    @if (ShowItemCount && DataSource != null && !IsLoading)
+    {
+        <div class="multi-select-count">
+            <span class="multi-select-count-text">
+                @SelectedCount of @TotalCount selected
+                @if (!string.IsNullOrWhiteSpace(_displaySearchText))
+                {
+                    <span class="multi-select-count-filtered">(filtered)</span>
+                }
+            </span>
+        </div>
+    }
+
+    <div id="@($"{_componentId}-listbox")"
+        class="multi-select-container @CssClass @(Disabled ? "multi-select-container-disabled" : "")" role="listbox"
+        aria-multiselectable="true" aria-label="@Label" aria-disabled="@Disabled.ToString().ToLower()"
+        style="max-height: @(Size * 2.5)rem; overflow-y: auto;" @attributes="AdditionalAttributes">
+        @if (IsLoading)
+        {
+            <div class="multi-select-loading">
+                <span class="multi-select-loading-spinner"></span>
+                <span>@LoadingText</span>
+            </div>
+        }
+        else if (DataSource != null && FilteredItems.Any())
+        {
+            var itemsList = FilteredItems.ToList();
+            @for (int i = 0; i < itemsList.Count; i++)
+            {
+                var item = itemsList[i];
+                var value = GetValue(item);
+                var text = GetText(item);
+                var isSelected = IsValueSelected(value);
+                var itemId = $"{_componentId}-item-{ConvertValueToString(value)}";
+                var isFocused = _focusedIndex == i;
+
+                <div class="multi-select-item @(Disabled ? "multi-select-item-disabled" : "") @(isFocused ? "multi-select-item-focused" : "")"
+                    role="option" aria-selected="@isSelected.ToString().ToLower()" tabindex="@(isFocused ? "0" : "-1")"
+                    @onclick="@(() => HandleItemClick(value))" @onclick:preventDefault="true"
+                    @onkeydown="@((KeyboardEventArgs e) => HandleKeyDown(e, value, i))">
+                    <input type="checkbox" id="@itemId" checked="@isSelected" disabled="@Disabled"
+                        @onchange="@((ChangeEventArgs e) => HandleCheckboxChanged(e, value))" @onclick:stopPropagation="true"
+                        aria-label="@($"Select {text}")" class="multi-select-checkbox" />
+                    <label for="@itemId" class="multi-select-item-label" @onclick:stopPropagation="true">
+                        @text
+                    </label>
+                </div>
+            }
+        }
+        else if (DataSource != null && !FilteredItems.Any() && !string.IsNullOrWhiteSpace(_displaySearchText))
+        {
+            <div class="multi-select-empty" role="status" aria-live="polite">
+                No items found matching "@_displaySearchText"
+            </div>
+        }
+        else if (DataSource == null || !DataSource.Any())
+        {
+            <div class="multi-select-empty" role="status" aria-live="polite">
+                No items available
+            </div>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(ValidationMessage))
+    {
+        <div class="validation-message">@ValidationMessage</div>
+    }
+</div>

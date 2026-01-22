@@ -1,0 +1,488 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.ComponentModel
+@using System.Reflection
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Web
+
+@typeparam TEnum where TEnum : struct, Enum
+
+<!-- Component Container -->
+<div class="@($"flag-selector-container {CssClass}")" id="@Id">
+    @if (ShowLabel && !string.IsNullOrWhiteSpace(Label))
+    {
+        <label class="flag-selector-label" for="@Id">
+            @Label
+        </label>
+    }
+
+    @if (errorMessage != null)
+    {
+        <div class="flag-selector-error" role="alert" aria-live="polite">
+            <svg class="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>@errorMessage</span>
+        </div>
+    }
+    else if (displayValues.Count == 0)
+    {
+        <div class="flag-selector-empty" role="status">
+            <span>No options available</span>
+        </div>
+    }
+    else
+    {
+        <!-- Grid of selectable flags -->
+        <div class="flag-grid" role="group" aria-label="@(string.IsNullOrWhiteSpace(Label) ? EnumName : Label)">
+            @foreach (var flag in displayValues)
+            {
+                var isSelected = IsSelected(flag);
+                var displayName = GetDisplayName(flag);
+                var flagId = $"{Id}_flag_{Convert.ToInt64(flag)}";
+
+                <button type="button" id="@flagId" @onclick="() => ToggleFlag(flag)"
+                    @onkeydown="@((e) => HandleKeyDown(e, flag))" class="flag-button"
+                    aria-pressed="@isSelected.ToString().ToLower()" aria-label="@displayName" title="@displayName"
+                    disabled="@Disabled">
+
+                    <!-- Checkbox/Toggle Icon -->
+                    <span class="icon-container @(isSelected ? "icon-selected" : "icon-unselected")">
+                        @if (isSelected)
+                        {
+                            <svg class="check-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        }
+                    </span>
+
+                    <!-- Display Name -->
+                    <span class="flag-name @(isSelected ? "flag-name-selected" : "")">
+                        @displayName
+                    </span>
+                </button>
+            }
+        </div>
+
+        @if (ShowSelectedCount && displayValues.Count > 0)
+        {
+            <div class="flag-selector-summary" role="status" aria-live="polite">
+                @GetSelectedCountText()
+            </div>
+        }
+    }
+</div>
+
+@code {
+    // === Public Parameters for Binding and Configuration ===
+
+    /// <summary>
+    /// The current value of the flags enum (bindable).
+    /// </summary>
+    [Parameter]
+    public TEnum Value { get; set; }
+
+    /// <summary>
+    /// Event callback invoked when the value changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TEnum> ValueChanged { get; set; }
+
+    /// <summary>
+    /// Optional label displayed above the selector.
+    /// If not provided, the enum type name will be used.
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// Whether to show the label. Default is true.
+    /// </summary>
+    [Parameter]
+    public bool ShowLabel { get; set; } = true;
+
+    /// <summary>
+    /// Enum values to exclude from display.
+    /// Can be passed as a list or using params syntax: ExcludedValues="@(Meals.Breakfast, Meals.Lunch)"
+    /// </summary>
+    [Parameter]
+    public IEnumerable<TEnum>? ExcludedValues { get; set; }
+
+    /// <summary>
+    /// Additional CSS classes to apply to the container.
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    /// <summary>
+    /// Unique identifier for the component instance.
+    /// </summary>
+    [Parameter]
+    public string Id { get; set; } = $"flag-selector-{Guid.NewGuid():N}";
+
+    /// <summary>
+    /// Whether the component is disabled.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Whether to show a summary of selected items count.
+    /// </summary>
+    [Parameter]
+    public bool ShowSelectedCount { get; set; } = false;
+
+    // === Private Fields and State ===
+
+    private Type EnumType => typeof(TEnum);
+    private List<TEnum> displayValues = new();
+    private string? errorMessage;
+    private string EnumName => EnumType.Name;
+
+    // === Lifecycle and Initialization ===
+
+    protected override void OnInitialized()
+    {
+        InitializeComponent();
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Re-initialize if ExcludedValues changes
+        if (displayValues.Count == 0 && errorMessage == null)
+        {
+            InitializeComponent();
+        }
+    }
+
+    private void InitializeComponent()
+    {
+        try
+        {
+            displayValues.Clear();
+            errorMessage = null;
+
+            // 1. Validate the TEnum type
+            if (!EnumType.IsDefined(typeof(FlagsAttribute), false))
+            {
+                errorMessage = $"{EnumName} must be a Flags Enum (decorated with [Flags] attribute).";
+                return;
+            }
+
+            // 2. Get all distinct, non-zero, single flag values
+            var allValues = Enum.GetValues(EnumType).Cast<TEnum>();
+            var excludedSet = ExcludedValues?.ToHashSet() ?? new HashSet<TEnum>();
+
+            foreach (var val in allValues)
+            {
+                long longVal = Convert.ToInt64(val);
+
+                // Exclude the 'None' (0) value and any composite values.
+                // A single flag is a power of 2 (x != 0 && (x & (x - 1)) == 0).
+                if (longVal != 0 && (longVal & (longVal - 1)) == 0 && !excludedSet.Contains(val))
+                {
+                    displayValues.Add(val);
+                    // Check if this value is excluded via the parameter
+                    //if (!excludedSet.Contains(val))
+
+
+                }
+            }
+
+            // Sort display values by their numeric value for consistent ordering
+            displayValues = displayValues.OrderBy(v => Convert.ToInt64(v)).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Initialization error: {ex.Message}";
+            Console.WriteLine($"FlagEnumSelector Error: {ex}");
+        }
+    }
+
+    // === Core Logic for Flag Toggling ===
+
+    private bool IsSelected(TEnum flag)
+    {
+        if (errorMessage != null) return false;
+
+        // Check if the current composite 'Value' contains the 'flag' using bitwise AND.
+        long current = Convert.ToInt64(Value);
+        long target = Convert.ToInt64(flag);
+        return (current & target) == target;
+    }
+
+    private async Task ToggleFlag(TEnum flag)
+    {
+        if (errorMessage != null || Disabled) return;
+
+        long current = Convert.ToInt64(Value);
+        long target = Convert.ToInt64(flag);
+
+        long newValue;
+
+        if (IsSelected(flag))
+        {
+            // Flag is set, unset it using XOR
+            newValue = current ^ target;
+        }
+        else
+        {
+            // Flag is unset, set it using OR
+            newValue = current | target;
+        }
+
+        // Convert the new long value back to the generic TEnum type
+        Value = (TEnum)Enum.ToObject(EnumType, newValue);
+
+        // Notify the parent component of the change
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    // === Helper Methods ===
+
+    /// <summary>
+    /// Gets the display name for an enum value, checking Display and Description attributes.
+    /// </summary>
+    private string GetDisplayName(TEnum value)
+    {
+        try
+        {
+            var member = EnumType.GetMember(value.ToString()).FirstOrDefault();
+            if (member == null) return value.ToString();
+
+            // 1. Check for [Display(Name="...")] attribute
+            var displayAttribute = member.GetCustomAttribute<DisplayAttribute>();
+            if (!string.IsNullOrWhiteSpace(displayAttribute?.Name))
+            {
+                return displayAttribute.Name;
+            }
+
+            // 2. Check for [Description("...")] attribute
+            var descriptionAttribute = member.GetCustomAttribute<DescriptionAttribute>();
+            if (!string.IsNullOrWhiteSpace(descriptionAttribute?.Description))
+            {
+                return descriptionAttribute.Description;
+            }
+
+            // 3. Fallback to Enum member name
+            return value.ToString();
+        }
+        catch
+        {
+            return value.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Handles keyboard navigation for accessibility.
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e, TEnum flag)
+    {
+        if (Disabled) return;
+
+        // Space or Enter to toggle
+        if (e.Key == " " || e.Key == "Enter")
+        {
+            await ToggleFlag(flag);
+        }
+    }
+
+    /// <summary>
+    /// Gets the text for the selected count summary.
+    /// </summary>
+    private string GetSelectedCountText()
+    {
+        var selectedCount = displayValues.Count(IsSelected);
+        if (selectedCount == 0)
+        {
+            return "No items selected";
+        }
+        else if (selectedCount == displayValues.Count)
+        {
+            return $"All {selectedCount} items selected";
+        }
+        else
+        {
+            return $"{selectedCount} of {displayValues.Count} items selected";
+        }
+    }
+}
+
+<!-- Professional Styles -->
+<style>
+    .flag-selector-container {
+        max-width: 100%;
+        margin: 1rem 0;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        background-color: #ffffff;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .flag-selector-container:focus-within {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-color: #6366f1;
+    }
+
+    .flag-selector-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+    }
+
+    .flag-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+
+    .flag-button {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        text-align: left;
+        outline: none;
+        border: 1px solid #d1d5db;
+        background-color: #ffffff;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: all 0.15s ease-in-out;
+        font-size: 0.875rem;
+        color: #111827;
+        min-height: 2.75rem;
+    }
+
+    .flag-button:hover:not(:disabled) {
+        background-color: #f9fafb;
+        border-color: #9ca3af;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .flag-button:focus:not(:disabled) {
+        outline: 2px solid #6366f1;
+        outline-offset: 2px;
+        border-color: #6366f1;
+    }
+
+    .flag-button:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .flag-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: #f3f4f6;
+    }
+
+    /* Style for unselected button */
+    .flag-button[aria-pressed="false"]:not(:disabled) {
+        background-color: #ffffff;
+        border-color: #d1d5db;
+    }
+
+    /* Style for selected button */
+    .flag-button[aria-pressed="true"]:not(:disabled) {
+        background-color: #eef2ff;
+        border-color: #6366f1;
+        color: #4338ca;
+    }
+
+    .icon-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 1.25rem;
+        width: 1.25rem;
+        min-width: 1.25rem;
+        border: 2px solid;
+        border-radius: 0.25rem;
+        margin-right: 0.75rem;
+        transition: all 0.15s ease-in-out;
+        flex-shrink: 0;
+    }
+
+    .icon-unselected {
+        background-color: #ffffff;
+        border-color: #9ca3af;
+    }
+
+    .icon-selected {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+
+    .check-icon {
+        height: 1rem;
+        width: 1rem;
+        color: #ffffff;
+        stroke-width: 3;
+    }
+
+    .flag-name {
+        flex-grow: 1;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.5;
+    }
+
+    .flag-name-selected {
+        font-weight: 600;
+    }
+
+    .flag-selector-error {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        font-size: 0.875rem;
+    }
+
+    .error-icon {
+        height: 1.25rem;
+        width: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .flag-selector-empty {
+        padding: 1.5rem;
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-style: italic;
+    }
+
+    .flag-selector-summary {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.8125rem;
+        color: #6b7280;
+        text-align: center;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 640px) {
+        .flag-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .flag-selector-container {
+            padding: 1rem;
+        }
+    }
+</style>

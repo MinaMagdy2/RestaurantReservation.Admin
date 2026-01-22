@@ -1,0 +1,23 @@
+﻿@page "/"
+@using RestaurantReservation.Admin.Components.Views.Restaurants
+@using RestaurantReservation.Common.Enums
+@rendermode InteractiveServer
+<PageTitle>Home</PageTitle>
+@attribute [Authorize]
+<PageComponent>
+    <h3>Basic Usage</h3>
+    <EnumMultiSelect TEnum="Meals" @bind-Value="@value" Label="Select Meals" ExcludedValues="@excludeValue" ShowSelectedCount="true"/>
+    <p class="mt-2"><strong>Selected Value:</strong> @value</p>
+
+    <h3 class="mt-4">With Excluded Values</h3>
+    <FlagEnumSelector TEnum="Meals" @bind-Value="value2" Label="Select Meals (Some Excluded)"
+        ExcludedValues="@excludedMeals" ShowSelectedCount="true" />
+    <p class="mt-2"><strong>Selected Value:</strong> @value2</p>
+</PageComponent>
+@code {
+    Meals value = Meals.Breakfast;
+    Meals value2 = Meals.None;
+    private Meals[] excludeValue = new Meals[] { Meals.None };
+    // Example: Exclude specific enum values from display
+    private readonly Meals[] excludedMeals = Array.Empty<Meals>(); // Add values like: new[] { Meals.Breakfast, Meals.Lunch }
+}

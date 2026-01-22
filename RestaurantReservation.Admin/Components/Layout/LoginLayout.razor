@@ -1,0 +1,28 @@
+﻿@inherits LayoutComponentBase
+<div class="login-page">
+    <div class="overlay"></div>
+    @Body
+</div>
+<style>
+    .login-page {
+        position: relative;
+        height: 100vh;
+        background: linear-gradient(135deg, #1a1a1a, #000000eb, #000);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .overlay {
+        position: absolute;
+        inset: 0;
+        background-image: url('img/Goldenbeach.jpg'); /* الصورة الزخرفية */
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0.25;
+        z-index: 1;
+    }
+
+</style>

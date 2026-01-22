@@ -1,0 +1,27 @@
+﻿@using SamSoft.Common.ExtensionMethods
+@using Syncfusion.Blazor.Buttons
+@typeparam TItem where TItem : Enum
+<MudField Label="@Caption" Variant="Variant.Outlined" InnerPadding="true" FullWidth="true" Disabled="@Disabled">
+    @foreach (var item in enumTypes)
+    {
+        var name = $"{Name.ToLower()}{item.ToString().ToLower()}_redio";
+        var description = item.GetDescription();
+        var displayName = string.IsNullOrWhiteSpace(description) ? item.ToString() : description;
+        <SfRadioButton Label="@displayName"
+                       Name="@name"
+                       Value="@item.ToString()"
+                       @bind-Checked="@Value"
+                       TChecked="TItem"
+                       Disabled="@Disabled"
+                       ValueChange="OnValueChange"></SfRadioButton>
+    }
+</MudField>
+
+
+
+<style>
+    .e-radio-wrapper {
+        padding: 0px 8px;
+    }
+
+</style>

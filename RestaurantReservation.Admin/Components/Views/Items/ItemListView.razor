@@ -1,0 +1,118 @@
+﻿@using RestaurantReservation.Dto.Models.Items
+@inherits ReactiveComponentBase<IItemListViewModel>
+@inject IJSRuntime JS
+@if (ViewModel != null)
+{
+    @if (ViewModel.IsLoading)
+    {
+        <SpinKitCircle />
+    }
+    else
+    {
+        <MudPaper Class="d-flex align-items-center justify-space-between p-4 mb-4"
+                  Elevation="1"
+                  Style="background-color:#1D2B53;">
+            <MudText Typo="Typo.h5" Class="fw-bold" Style="color:white">
+                Items
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="AddNew">
+                Add New Item
+            </MudButton>
+        </MudPaper>
+
+        <MudText>Items Count: @ViewModel.Items.Count</MudText>
+
+        <SfGrid TValue="ItemDto"
+                DataSource="@ViewModel.Items"
+                AllowSorting="true"
+                AllowPaging="true"
+                AllowResizing="true"
+                Width="100%"
+                EnableAdaptiveUI="false"
+                >
+
+
+
+            <GridColumns>
+
+                <GridColumn Field="@nameof(ItemDto.ItemName)"
+                            HeaderText="Item Name"
+                            Width="200" />
+
+                <GridColumn Field="@nameof(ItemDto.Description)"
+                            HeaderText="Description"
+                            Width="300" />
+
+                <GridColumn Field="@nameof(ItemDto.Price)"
+                            HeaderText="Price"
+                            Width="100"
+                            TextAlign="TextAlign.Right" />
+
+                <GridColumn HeaderText="Image"
+                            Width="120"
+                            TextAlign="TextAlign.Center">
+                    <Template>
+                        @{
+                            var item = context as ItemDto;
+                        }
+                        <img src="@item?.ImageUrl"
+                             alt="@item?.ItemName"
+                             style="width:50px;height:50px;object-fit:cover;border-radius:5px;" />
+                    </Template>
+                </GridColumn>
+
+                <!-- ACTIONS -->
+                <GridColumn HeaderText="Actions"
+                            Width="200"
+                            TextAlign="TextAlign.Center">
+                    <Template>
+                        @{
+                            var item = context as ItemDto;
+                        }
+
+                      
+                        @if (!item!.IsObsolete)
+                        {
+                            <button class="e-btn e-flat bg-info me-1"
+                                    @onclick="() => EditItem(item.Id)">
+                                <span class="e-icons e-edit"></span>
+                            </button>
+                        }
+
+                    
+                        <button class="e-btn e-flat bg-danger me-1"
+                                @onclick="() => DeleteItem(item.Id)">
+                            <span class="e-icons e-trash"></span>
+                        </button>
+
+                        
+                        <button class="e-btn e-flat @(item.IsObsolete ? "bg-success" : "bg-warning")"
+                                title="@(item.IsObsolete ? "Resume" : "Pause")"
+                                @onclick="() => ToggleObsolete(item)">
+                            <span class="e-icons @(item.IsObsolete ? "e-play" : "e-pause")"></span>
+                        </button>
+                    </Template>
+                </GridColumn>
+
+            </GridColumns>
+        </SfGrid>
+    }
+}
+
+<style>
+   
+    tr:has(td button.bg-success) {
+        opacity: 0.5 !important;
+    }
+    tr{
+        opacity: 1 ;
+    }
+    .e-btn{
+        font-size:large;
+    }
+
+</style>

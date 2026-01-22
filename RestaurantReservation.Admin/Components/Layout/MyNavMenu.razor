@@ -1,0 +1,10 @@
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+    <AuthorizeView Roles="Admin">
+         <MudNavGroup Title="Coding" Expanded="false">
+            <MudNavLink Href="/Languages" Match="NavLinkMatch.Prefix">Languages</MudNavLink>
+            <MudNavLink Href="/Restaurants" Match="NavLinkMatch.Prefix">Restaurants</MudNavLink>
+            <MudNavLink Href="/Items" Match="NavLinkMatch.Prefix">Items</MudNavLink>
+         </MudNavGroup>
+    </AuthorizeView>
+</MudNavMenu>
